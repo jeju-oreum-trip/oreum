@@ -88,7 +88,7 @@ async function setOreum(i){cur=+i;const o=OREUMS[cur];$('hn').textContent=o.n;ph
 let rr=null,lb=null;if(ROUTES[o.n])rr=resample(ROUTES[o.n],300);else if(o.g==='e'){await loadRX();if(cur!==+i)return;const rt=RX[o.no];if(rt)rr=resample(rt,300)}
 if(rr)lb=o.g==='v'?'실제 탐방로(OSM)':'추정 탐방로(OSM, 자동 연결)';else lb=o.noLoc?'위치 추가 필요':'경로 없음 · 샘플 경로';
 if(o.g==='e'&&!rr)lb='경로 없음 · 샘플 경로';
-setTrack(rr||makeSample(o),!rr,lb);map.jumpTo({center:track[0],zoom:o.noLoc?9.5:15,pitch:o.noLoc?0:60,bearing:20});
+setTrack(rr||makeSample(o),true,lb);map.jumpTo({center:track[0],zoom:o.noLoc?9.5:15,pitch:o.noLoc?0:60,bearing:20});
 if(o.noLoc)msg('📍 이 오름은 위치 좌표가 아직 없어요. 3D 영상은 못 만들지만 "트래킹 시작"으로 직접 기록하면 영상으로 만들 수 있어요.');else if(o.w)msg('⚠ 위치 좌표가 불확실한 오름이에요(같은 이름 여러 곳).');else msg('');}
 function draw(p){const n=Math.max(2,Math.floor(p*(track.length-1))+1);
  map.getSource('route').setData({type:'Feature',geometry:{type:'LineString',coordinates:track.slice(0,n)}});
