@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>제주 오름 3D 트립</title>
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+<style>
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:#0e1a14;color:#fff;font-family:system-ui,"Noto Sans KR",sans-serif}
+#app{display:flex;flex-direction:column;height:100%;max-width:520px;margin:0 auto}
+header{padding:10px 14px;font-weight:700;font-size:18px}
+header small{display:block;font-weight:400;opacity:.7;font-size:12px}
+#stage{position:relative;flex:1;min-height:0;display:flex;justify-content:center;align-items:center}
+#frame{position:relative;height:100%;aspect-ratio:9/16;max-width:100%;background:#000;border-radius:14px;overflow:hidden}
+#map{position:absolute;inset:0}
+#hud{position:absolute;left:0;right:0;bottom:0;padding:16px;background:linear-gradient(transparent,rgba(0,0,0,.65));pointer-events:none}
+#hud .n{font-size:22px;font-weight:800}#hud .s{display:flex;gap:16px;margin-top:6px;font-size:15px}
+#hud .s b{font-size:18px}
+#bar{height:4px;background:rgba(255,255,255,.3);margin-top:10px;border-radius:2px}#bar i{display:block;height:100%;width:0;background:#ff8a3d;border-radius:2px}
+#ctl{padding:10px 14px calc(12px + env(safe-area-inset-bottom));display:grid;gap:8px}
+select,button{font-size:18px;padding:14px;border-radius:12px;border:0;font-weight:700}
+select{background:#1f3a2c;color:#fff}
+button.p{background:#ff8a3d;color:#1b1209}button.q{background:#2b4a39;color:#fff}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#msg{font-size:13px;opacity:.8;min-height:18px;text-align:center}
+a{color:#9fd}
+</style></head><body><div id="app">
+<header>제주 오름 3D 트립<small>시험판 · 샘플 경로(실제 GPS 아님)</small></header>
+<div id="stage"><div id="frame"><div id="map"></div>
+<div id="hud"><div class="n" id="hn"></div><div class="s"><span>거리 <b id="hd">0.0</b> km</span><span>고도 <b id="he">0</b> m</span><span id="hp"></span></div><div id="bar"><i id="bi"></i></div></div></div></div>
+<div id="ctl"><select id="sel"></select>
+<div class="row"><button class="p" id="play">▶ 3D 영상 보기</button><button class="q" id="rec">⏺ 영상 저장</button></div>
+<div id="msg"></div></div></div>
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script><script src="https://unpkg.com/mp4-muxer@5.1.3/build/mp4-muxer.js"></script>
+<script>
+const OREUMS=[
+{n:"용눈이오름",lat:33.4599065,lon:126.8325016,r:520,h:248},
+{n:"다랑쉬오름",lat:33.4777119,lon:126.8215284,r:560,h:382},
+{n:"새별오름",lat:33.3662548,lon:126.3576883,r:600,h:519},
+{n:"금오름",lat:33.3546336,lon:126.3058247,r:480,h:427},
+{n:"따라비오름",lat:33.3881900,lon:126.7524586,r:520,h:342}];
+const sel=document.getElementById('sel');OREUMS.forEach((o,i)=>sel.add(new Option(o.n,i)));
+const $=id=>document.getElementById(id);
+// 샘플 경로: 정상 주변을 감아 올라가는 나선(시험용). 실제 기록이 생기면 교체.
+function makeTrack(o){const pts=[],N=240,mlat=111320,mlon=111320*Math.cos(o.lat*Math.PI/180);
+ for(let i=0;i<=N;i++){const t=i/N,ang=Math.PI*1.1+t*Math.PI*3.0,r=o.r*(1-0.88*t)*(1+0.08*Math.sin(t*20));
+  pts.push([o.lon+Math.cos(ang)*r/mlon,o.lat+Math.sin(ang)*r/mlat]);}return pts;}
+const map=new maplibregl.Map({container:'map',center:[OREUMS[0].lon,OREUMS[0].lat],zoom:14.5,pitch:62,bearing:20,
+ canvasContextAttributes:{preserveDrawingBuffer:true},maxPitch:80,attributionControl:{compact:true},
+ style:{version:8,sources:{
+  sat:{type:'raster',tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],tileSize:256,maxzoom:18,attribution:'Esri World Imagery'},
+  dem:{type:'raster-dem',tiles:['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],encoding:'terrarium',tileSize:256,maxzoom:14,attribution:'Mapzen/AWS terrain'},
+  route:{type:'geojson',data:{type:'Feature',geometry:{type:'LineString',coordinates:[[0,0],[0,0]]}}}},
+ layers:[{id:'sat',type:'raster',source:'sat'},
+  {id:'rc',type:'line',source:'route',paint:{'line-color':'#fff','line-width':9,'line-opacity':.9},layout:{'line-cap':'round','line-join':'round'}},
+  {id:'r',type:'line',source:'route',paint:{'line-color':'#ff6a00','line-width':5},layout:{'line-cap':'round','line-join':'round'}}],
+ terrain:{source:'dem',exaggeration:1.6}}});
+const tc={};
+function tile(z,x,y){const k=z+'/'+x+'/'+y;if(tc[k])return tc[k];const p=new Promise(res=>{const im=new Image();im.crossOrigin='anonymous';
+ im.onload=()=>{const c=document.createElement('canvas');c.width=c.height=256;const g=c.getContext('2d');g.drawImage(im,0,0);res(g.getImageData(0,0,256,256).data)};
+ im.onerror=()=>res(null);im.src='https://s3.amazonaws.com/elevation-tiles-prod/terrarium/'+k+'.png';});return tc[k]=p;}
+async function elevAt(lon,lat){const z=13,n=2**z,fx=(lon+180)/360*n,la=lat*Math.PI/180,fy=(1-Math.log(Math.tan(la)+1/Math.cos(la))/Math.PI)/2*n;
+ const d=await tile(z,Math.floor(fx),Math.floor(fy));if(!d)return null;const px=Math.floor((fx%1)*256),py=Math.floor((fy%1)*256),i=(py*256+px)*4;return d[i]*256+d[i+1]+d[i+2]/256-32768;}
+let elev=[];
+let track=[],cum=[],total=0,cur=0,playing=false,raf=0,cb=0;
+function setOreum(i){cur=+i;const o=OREUMS[cur];track=makeTrack(o);cum=[0];
+ for(let k=1;k<track.length;k++){const a=track[k-1],b=track[k],dx=(b[0]-a[0])*111320*Math.cos(a[1]*Math.PI/180),dy=(b[1]-a[1])*111320;cum.push(cum[k-1]+Math.hypot(dx,dy));}
+ total=cum[cum.length-1];elev=[];Promise.all(track.map((t,k)=>elevAt(t[0],t[1]).then(v=>elev[k]=v))).then(()=>{window.__elev=elev.length});$('hn').textContent=o.n;draw(0);
+ map.jumpTo({center:track[0],zoom:15,pitch:62,bearing:20});}
+function draw(p){const n=Math.max(2,Math.floor(p*(track.length-1))+1);
+ map.getSource('route').setData({type:'Feature',geometry:{type:'LineString',coordinates:track.slice(0,n)}});
+ $('hd').textContent=(cum[n-1]/1000*(p>=1?1:1)).toFixed(2);$('bi').style.width=(p*100)+'%';
+ const e=elev[n-1];$('he').textContent=e==null?'-':Math.round(e);$('hp').textContent=Math.round(p*100)+'%';}
+
+const FPS=30,SECS=+(new URLSearchParams(location.search).get('secs')||14),F=FPS*SECS;
+let cam=null;
+function smooth(arr,w){return arr.map((_,i)=>{let s=0,c=0;for(let k=-w;k<=w;k++){const j=Math.min(arr.length-1,Math.max(0,i+k));s+=arr[j];c++}return s/c});}
+function buildCam(){const mlon=111320*Math.cos(track[0][1]*Math.PI/180),mlat=111320;
+ const P=[],S=[];
+ for(let k=0;k<=F;k++){const p=k/F,e=p*p*(3-2*p),s=0.55*p+0.45*e,d=s*total;
+  let i=1;while(i<cum.length-1&&cum[i]<d)i++;const t=(d-cum[i-1])/Math.max(1e-6,cum[i]-cum[i-1]);
+  P.push([track[i-1][0]+(track[i][0]-track[i-1][0])*t,track[i-1][1]+(track[i][1]-track[i-1][1])*t]);S.push(s);}
+ const X=smooth(P.map(q=>q[0]),18),Y=smooth(P.map(q=>q[1]),18);
+ let H=[],prev=0;for(let k=0;k<=F;k++){const j=Math.min(F,k+20);let dx=(X[j]-X[k])*mlon,dy=(Y[j]-Y[k])*mlat;
+  let h=(dx||dy)?Math.atan2(dx,dy)*180/Math.PI:prev;if(k>0)while(h-prev>180)h-=360,0;if(k>0){while(h-prev>180)h-=360;while(h-prev<-180)h+=360;}prev=h;H.push(h);}
+ for(let k=F-20;k<=F;k++)H[k]=H[F-21];
+ const B=smooth(H,25).map((h,k)=>{const p=k/F;return h-35+(p>0.85?(p-0.85)/0.15*70:0)});
+ cam={X,Y,B,S};}
+function camAt(f){f=Math.max(0,Math.min(F,f));const i=Math.floor(f),j=Math.min(F,i+1),t=f-i,L=(a,b)=>a+(b-a)*t,p=f/F;
+ return {s:L(cam.S[i],cam.S[j]),opt:{center:[L(cam.X[i],cam.X[j]),L(cam.Y[i],cam.Y[j])],bearing:L(cam.B[i],cam.B[j]),pitch:58,zoom:15.2-(p>0.85?(p-0.85)/0.15*0.8:0)}};}
+function show(f){const c=camAt(f);map.jumpTo(c.opt);draw(c.s);}
+function fly(ms,done){buildCam();const t0=performance.now();playing=true;
+ const step=now=>{if(!playing)return;const f=(now-t0)/ms*F;show(f);if(f<F)raf=requestAnimationFrame(step);else{playing=false;done&&done();}};
+ raf=requestAnimationFrame(step);}
+function stop(){playing=false;cancelAnimationFrame(raf);}
+$('sel').onchange=e=>{stop();setOreum(e.target.value)};
+$('play').onclick=()=>{if(playing){stop();$('play').textContent='▶ 3D 영상 보기';return;}$('play').textContent='■ 멈춤';setOreum(cur);
+ map.once('idle',()=>fly(SECS*1000,()=>$('play').textContent='▶ 3D 영상 보기'));};
+const idle=()=>new Promise(r=>{let d=0;const f=()=>{if(!d){d=1;r()}};map.once('idle',f);setTimeout(f,5000);});
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+let busy=false;
+// 영상 저장: 프레임을 하나씩 정확히 1/30초씩 진행시켜 렌더링 -> H.264(mp4)로 인코딩. 폰이 느려도 영상은 매끄러움.
+$('rec').onclick=async()=>{if(busy)return;
+ if(typeof VideoEncoder==='undefined'){$('msg').textContent='이 브라우저는 영상 저장을 지원하지 않아요 (크롬 최신 버전 필요)';return;}
+ stop();busy=true;$('play').disabled=true;setOreum(cur);const o=OREUMS[cur];await idle();await sleep(800);buildCam();
+ const W=540,H=960,c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d'),mc=map.getCanvas();
+ const vcfg=async()=>{for(const codec of['avc1.640028','avc1.4d0028','avc1.42001f']){const cf={codec,width:W,height:H,bitrate:5e6,framerate:FPS};try{const r=await VideoEncoder.isConfigSupported(cf);if(r.supported)return cf}catch(e){}}return null};
+ const cf=await vcfg();if(!cf){$('msg').textContent='이 기기는 H.264 저장을 지원하지 않아요';busy=false;$('play').disabled=false;return;}
+ let audio=false;const acfg={codec:'mp4a.40.2',sampleRate:44100,numberOfChannels:1,bitrate:64000};
+ try{audio=typeof AudioEncoder!=='undefined'&&(await AudioEncoder.isConfigSupported(acfg)).supported}catch(e){}
+ const target=new Mp4Muxer.ArrayBufferTarget();
+ const mux=new Mp4Muxer.Muxer({target,video:{codec:'avc',width:W,height:H,frameRate:FPS},...(audio?{audio:{codec:'aac',numberOfChannels:1,sampleRate:44100}}:{}),fastStart:'in-memory'});
+ const ve=new VideoEncoder({output:(ch,m)=>mux.addVideoChunk(ch,m),error:e=>{$('msg').textContent='인코딩 오류: '+e.message}});ve.configure(cf);
+ if(audio){const ae=new AudioEncoder({output:(ch,m)=>mux.addAudioChunk(ch,m),error:()=>{}});ae.configure(acfg);
+  const tot=44100*SECS,blk=4410;for(let n=0;n<tot;n+=blk){ae.encode(new AudioData({format:'f32-planar',sampleRate:44100,numberOfFrames:blk,numberOfChannels:1,timestamp:Math.round(n/44100*1e6),data:new Float32Array(blk)}));}
+  await ae.flush();}
+ const t0=performance.now();
+ for(let f=0;f<=F;f++){const cm=camAt(f);map.jumpTo(cm.opt);draw(cm.s);await idle();
+  const sc=Math.max(W/mc.width,H/mc.height),w=mc.width*sc,h=mc.height*sc;g.drawImage(mc,(W-w)/2,(H-h)/2,w,h);
+  const gr=g.createLinearGradient(0,H-220,0,H);gr.addColorStop(0,'rgba(0,0,0,0)');gr.addColorStop(1,'rgba(0,0,0,.7)');g.fillStyle=gr;g.fillRect(0,H-220,W,220);
+  g.fillStyle='#fff';g.font='800 44px sans-serif';g.fillText(o.n,32,H-130);g.font='600 28px sans-serif';
+  g.fillText('거리 '+$('hd').textContent+'km   고도 '+$('he').textContent+'m',32,H-80);
+  g.fillStyle='rgba(255,255,255,.3)';g.fillRect(32,H-48,W-64,6);g.fillStyle='#ff8a3d';g.fillRect(32,H-48,(W-64)*cm.s,6);
+  g.font='500 18px sans-serif';g.fillStyle='rgba(255,255,255,.7)';g.fillText('제주 오름 3D 트립',W-190,44);
+  const vf=new VideoFrame(c,{timestamp:Math.round(f*1e6/FPS),duration:Math.round(1e6/FPS)});ve.encode(vf,{keyFrame:f%FPS===0});vf.close();
+  while(ve.encodeQueueSize>8)await sleep(5);
+  if(f%5===0){$('rec').textContent='만드는 중 '+Math.round(f/F*100)+'%';$('msg').textContent='화면을 켜 두세요';}}
+ await ve.flush();mux.finalize();
+ const blob=new Blob([target.buffer],{type:'video/mp4'}),url=URL.createObjectURL(blob);
+ $('msg').innerHTML='완료! <a href="'+url+'" download="'+o.n+'.mp4">'+o.n+'.mp4 저장</a> ('+Math.round(blob.size/1024)+'KB, '+Math.round((performance.now()-t0)/1000)+'초 걸림)';
+ const a=document.createElement('a');a.href=url;a.download=o.n+'.mp4';a.click();
+ $('rec').textContent='⏺ 영상 저장';busy=false;$('play').disabled=false;window.__recurl=url;window.__rec={size:blob.size,audio};};
+map.on('load',()=>{setOreum(0);window.__ready=true;
+ const m=location.hash.match(/shot=([\d.]+)/);if(m){const p=+m[1],i=Math.floor(p*(track.length-1));buildCam();show(p*F);}});
+</script></body></html>
