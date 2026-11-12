@@ -24,17 +24,18 @@ label.b{background:#2b4a39;display:block}
 #msg{font-size:13px;opacity:.85;min-height:18px;text-align:center}
 a{color:#9fd}button:disabled{opacity:.5}
 #sheet{position:fixed;inset:0;z-index:60;background:#0e1a14;display:flex;flex-direction:column;gap:8px;padding:12px;max-width:520px;margin:0 auto}#sheet.hide{display:none!important}#sh{display:flex;justify-content:space-between;align-items:center;font-size:22px}#sh button{padding:10px 14px;font-size:16px}#sheet #tree{position:static;display:block!important;flex:1;box-shadow:none;min-height:0}
-.big button{font-size:26px;padding:20px 8px;line-height:1.3}.lnk{background:none;font-size:14px;opacity:.7;padding:6px}#more.on{display:grid!important}
+.big button{font-size:19px;padding:13px 6px;line-height:1.2}#ctl button,#ctl label.b{font-size:16px;padding:11px}#ctl .big button{font-size:19px;padding:13px 6px}#jmap{height:23vh;min-height:130px;margin:6px 14px 0;border-radius:14px;overflow:hidden;position:relative}#jmap .t{position:absolute;left:8px;top:6px;z-index:2;font-size:12px;background:#000a;padding:2px 8px;border-radius:8px;pointer-events:none}.lnk{background:none;font-size:14px;opacity:.7;padding:6px}#more.on{display:grid!important}
 .hide{display:none!important}
 </style></head><body><div id="app">
 <header>제주 오름 3D 트립<small id="sub">시험판</small></header>
+<div id="jmap"><div class="t">제주 한눈에 · 점을 누르면 선택</div></div>
 <div id="stage"><div id="frame"><div id="map"></div><div id="banner"></div><img id="ph" alt="">
 <div id="hud"><div class="n" id="hn"></div><div class="s"><span>거리 <b id="hd">0.0</b> km</span><span>고도 <b id="he">-</b> m</span><span>상승 <b id="hu">0</b> m</span><span id="ht"></span><span id="hp"></span></div><div id="bar"><i id="bi"></i></div></div></div></div>
 <div id="ctl">
  <div id="sheet" class="hide"><div id="sh"><b>어디를 걸을까요?</b><button id="shx" class="q">✕ 닫기</button></div>
  <div id="cats"><button data-c="">전체</button><button data-c="오름">⛰ 오름</button><button data-c="올레">🚶 올레길</button><button data-c="한라산">🗻 한라산</button></div><input id="q" type="search" placeholder="🔍 이름 검색 (예: 새별)" autocomplete="off"><div id="tree" style="display:none"></div></div>
  <div id="idle" style="display:grid;gap:8px">
-  <div class="row big"><button class="q" id="pickBtn">🔍<br>길 고르기</button><button class="p" id="start">📍<br>걷기 시작</button></div>
+  <div class="row big"><button class="q" id="pickBtn">🔍 길 고르기</button><button class="p" id="start">📍 걷기 시작</button></div>
   <div class="row"><button class="q" id="play">▶ 3D 영상 보기</button><button class="q" id="rec">🎬 영상 저장</button></div>
   <button class="q hide" id="sample">샘플 경로로 돌아가기</button>
   <button id="moreB" class="lnk">⋯ 더보기 (사진·GPX·안내)</button>
@@ -206,4 +207,15 @@ map.on('load',()=>{{const t=new URLSearchParams(location.search).get('o');setOre
  try{const sv=JSON.parse(localStorage.getItem(KEY)||'null');if(sv&&sv.pts&&sv.pts.length>10){const r=resample(sv.pts,300);if(r){cur=sv.o;setSel(cur);$('hn').textContent=OREUMS[cur].n;setTrack(r,false);map.jumpTo({center:r[0],zoom:15,pitch:60});msg('마지막 기록을 불러왔어요 ('+(total/1000).toFixed(2)+'km)')}}}catch(e){}
  const m=location.hash.match(/shot=([\d.]+)/);if(m){buildCam();show(+m[1]*F);}});
 window.__st=()=>({mode,pts:pts.length,summit,isSample,total:Math.round(total),photos:photos.length});
-</script><script>(function(){const $=i=>document.getElementById(i);$('pickBtn').onclick=()=>{$('sheet').classList.remove('hide');$('q').value='';$('q').dispatchEvent(new Event('input'));$('tree').style.display='block'};$('shx').onclick=()=>$('sheet').classList.add('hide');$('tree').addEventListener('click',e=>{if(e.target.closest('.ob'))setTimeout(()=>$('sheet').classList.add('hide'),0)});$('moreB').onclick=()=>$('more').classList.toggle('on')})()</script></body></html>
+</script><script>(function(){const $=i=>document.getElementById(i);$('pickBtn').onclick=()=>{$('sheet').classList.remove('hide');$('q').value='';$('q').dispatchEvent(new Event('input'));$('tree').style.display='block'};$('shx').onclick=()=>$('sheet').classList.add('hide');$('tree').addEventListener('click',e=>{if(e.target.closest('.ob'))setTimeout(()=>$('sheet').classList.add('hide'),0)});$('moreB').onclick=()=>$('more').classList.toggle('on')})()</script><script>(function(){const o0=window.setOreum;let jm;
+const col=['match',['get','c'],'오름','#ff8a3d','올레','#4db8ff','한라산','#c58bff','#ffffff'];
+function fc(){return{type:'FeatureCollection',features:OREUMS.map((o,i)=>({type:'Feature',properties:{i:i,c:o.c||'오름'},geometry:{type:'Point',coordinates:[o.lon,o.lat]}}))}}
+function init(){jm=new maplibregl.Map({container:'jmap',center:[126.55,33.37],zoom:8.05,minZoom:7.5,maxZoom:13,attributionControl:false,style:{version:8,sources:{s:{type:'raster',tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],tileSize:256,maxzoom:18}},layers:[{id:'s',type:'raster',source:'s'}]}});
+jm.on('load',()=>{jm.addSource('p',{type:'geojson',data:fc()});jm.addSource('sel',{type:'geojson',data:{type:'FeatureCollection',features:[]}});
+jm.addLayer({id:'pd',type:'circle',source:'p',paint:{'circle-radius':['interpolate',['linear'],['zoom'],8,3,12,6],'circle-color':col,'circle-stroke-color':'#000','circle-stroke-width':.8,'circle-opacity':.95}});
+jm.addLayer({id:'sl',type:'circle',source:'sel',paint:{'circle-radius':9,'circle-color':'#fff','circle-opacity':.25,'circle-stroke-color':'#fff','circle-stroke-width':2.5}});
+jm.on('click',e=>{const f=jm.queryRenderedFeatures([[e.point.x-12,e.point.y-12],[e.point.x+12,e.point.y+12]],{layers:['pd']});if(!f.length||mode!=='idle')return;stop();setOreum(f[0].properties.i);pickName();});
+sel(cur)})}
+function sel(i){if(!jm||!jm.getSource('sel')||!OREUMS[i])return;jm.getSource('sel').setData({type:'Feature',geometry:{type:'Point',coordinates:[OREUMS[i].lon,OREUMS[i].lat]}})}
+window.setOreum=function(i){o0(i);sel(i)};
+const t=setInterval(()=>{if(window.__ready){clearInterval(t);init()}},300)})()</script></body></html>
