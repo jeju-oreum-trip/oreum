@@ -39,6 +39,7 @@ a{color:#9fd}button:disabled{opacity:.5}
 <div id="ctl">
  <div id="sheet" class="hide"><div id="sh"><b>어디를 걸을까요?</b><button id="shx" class="q">✕ 닫기</button></div>
  <div id="cats"><button data-c="">전체</button><button data-c="오름">⛰ 오름</button><button data-c="올레">🚶 올레길</button><button data-c="한라산둘레길">🌲 한라산<br>둘레길</button><button data-c="한라산등반로">🗻 한라산<br>등반로</button></div><input id="q" type="search" placeholder="🔍 이름 검색 (예: 새별)" autocomplete="off"><div id="tree" style="display:none"></div></div>
+ <div id="wrn" class="hide" style="background:#4a2a12;color:#ffd77a;border-radius:12px;padding:10px 12px;font-size:14px;line-height:1.45">⚠ 한라산 둘레길은 <b>비 오는 날과 비 온 뒤 2일간 출입 금지</b>예요. 입산은 4~9월 오후 2시, 10~3월 낮 12시까지. 가기 전에 한라산둘레길 안내(hallatrail.or.kr)를 꼭 확인하세요.</div>
  <div id="idle" style="display:grid;gap:8px">
   <div class="row big"><button class="q" id="pickBtn">🔍 길 고르기</button><button class="p" id="start">📍 걷기 시작</button></div>
   <div class="row"><button class="q" id="play">▶ 3D 영상 보기</button><button class="q" id="rec">🎬 영상 저장</button></div>
@@ -233,4 +234,4 @@ $('hgo').onclick=()=>{$('home').classList.add('hide');$('start').click()};
 $('backHome').onclick=()=>{if(mode!=='idle'){return}stop();$('home').classList.remove('hide');if(hm)hm.resize()};
 $('tree').addEventListener('click',e=>{if(e.target.closest('.ob'))$('home').classList.add('hide')});
 if(/[?&]o=/.test(location.search))$('home').classList.add('hide');
-const t=setInterval(()=>{if(window.__ready){clearInterval(t);init()}},300)})()</script></body></html>
+const t=setInterval(()=>{if(window.__ready){clearInterval(t);init()}},300)})()</script><script>(function(){const o1=window.setOreum;window.setOreum=function(i){o1(i);const w=document.getElementById('wrn');if(w)w.classList.toggle('hide',!(OREUMS[i]&&OREUMS[i].c==='한라산둘레길'))}})()</script></body></html>
