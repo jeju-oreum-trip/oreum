@@ -26,9 +26,14 @@ a{color:#9fd}button:disabled{opacity:.5}
 #sheet{position:fixed;inset:0;z-index:60;background:#0e1a14;display:flex;flex-direction:column;gap:8px;padding:12px;max-width:520px;margin:0 auto}#sheet.hide{display:none!important}#sh{display:flex;justify-content:space-between;align-items:center;font-size:22px}#sh button{padding:10px 14px;font-size:16px}#sheet #tree{position:static;display:block!important;flex:1;box-shadow:none;min-height:0}
 .big button{font-size:19px;padding:13px 6px;line-height:1.2}#ctl button,#ctl label.b{font-size:16px;padding:11px}#ctl .big button{font-size:19px;padding:13px 6px}#jmap{height:23vh;min-height:130px;margin:6px 14px 0;border-radius:14px;overflow:hidden;position:relative}#jmap .t{position:absolute;left:8px;top:6px;z-index:2;font-size:12px;background:#000a;padding:2px 8px;border-radius:8px;pointer-events:none}.lnk{background:none;font-size:14px;opacity:.7;padding:6px}#more.on{display:grid!important}
 .hide{display:none!important}
-</style></head><body><div id="app">
-<header>제주 오름 3D 트립<small id="sub">시험판</small></header>
-<div id="jmap"><div class="t">제주 한눈에 · 점을 누르면 선택</div></div>
+#home{position:fixed;inset:0;z-index:40;background:#0e1a14;max-width:520px;margin:0 auto}#home.hide{display:none!important}#hmap{position:absolute;inset:0}
+#htop{position:absolute;left:0;right:0;top:0;padding:12px 12px 8px;background:linear-gradient(#000c,transparent);z-index:3;pointer-events:none}#htop b{font-size:22px}#htop small{display:block;opacity:.8;font-size:13px;margin-top:2px}#hch{display:flex;gap:6px;margin-top:8px;pointer-events:auto}#hch button{flex:1;font-size:14px;padding:8px 2px;background:#1f3a2cdd;border-radius:12px}#hch button.on{background:#ff8a3d;color:#111}
+#hbot{position:absolute;left:0;right:0;bottom:0;padding:10px 12px calc(12px + env(safe-area-inset-bottom));display:grid;grid-template-columns:1fr 1fr;gap:8px;z-index:3;background:linear-gradient(transparent,#000c)}#hbot button{font-size:17px;padding:13px 6px}#hback{position:absolute;left:12px;top:92px;z-index:4;background:#ff8a3d;color:#111;font-size:17px;padding:10px 16px}
+.rb{background:#ff8a3d;color:#111;border-radius:20px;padding:6px 10px;font:800 14px system-ui,sans-serif;border:2px solid #fff;box-shadow:0 2px 8px #000a;white-space:nowrap;cursor:pointer;text-align:center;line-height:1.2}.rb small{display:block;font-weight:600;font-size:11px}
+.pb{color:#fff;background:#000c;border-radius:10px;padding:3px 8px;font:700 13px system-ui,sans-serif;border:2px solid var(--c);white-space:nowrap;cursor:pointer}
+</style></head><body><div id="home"><div id="hmap"></div><div id="htop"><b id="ht">제주 어디로 갈까요?</b><small id="hs">동네를 누르면 크게 보여줘요</small><div id="hch"><button data-c="">전체</button><button data-c="오름">⛰ 오름</button><button data-c="올레">🚶 올레길</button><button data-c="한라산">🗻 한라산</button></div></div><button id="hback" class="hide">← 제주 전체</button><div id="hbot"><button class="q" id="hfind">🔍 이름으로 찾기</button><button class="p" id="hgo">📍 바로 걷기 시작</button></div></div>
+<div id="app">
+<header style="display:flex;justify-content:space-between;align-items:center"><div>제주 오름 3D 트립<small id="sub">시험판</small></div><button id="backHome" style="font-size:16px;padding:10px 14px;background:#2b4a39">🗺 지도</button></header>
 <div id="stage"><div id="frame"><div id="map"></div><div id="banner"></div><img id="ph" alt="">
 <div id="hud"><div class="n" id="hn"></div><div class="s"><span>거리 <b id="hd">0.0</b> km</span><span>고도 <b id="he">-</b> m</span><span>상승 <b id="hu">0</b> m</span><span id="ht"></span><span id="hp"></span></div><div id="bar"><i id="bi"></i></div></div></div></div>
 <div id="ctl">
@@ -207,15 +212,25 @@ map.on('load',()=>{{const t=new URLSearchParams(location.search).get('o');setOre
  try{const sv=JSON.parse(localStorage.getItem(KEY)||'null');if(sv&&sv.pts&&sv.pts.length>10){const r=resample(sv.pts,300);if(r){cur=sv.o;setSel(cur);$('hn').textContent=OREUMS[cur].n;setTrack(r,false);map.jumpTo({center:r[0],zoom:15,pitch:60});msg('마지막 기록을 불러왔어요 ('+(total/1000).toFixed(2)+'km)')}}}catch(e){}
  const m=location.hash.match(/shot=([\d.]+)/);if(m){buildCam();show(+m[1]*F);}});
 window.__st=()=>({mode,pts:pts.length,summit,isSample,total:Math.round(total),photos:photos.length});
-</script><script>(function(){const $=i=>document.getElementById(i);$('pickBtn').onclick=()=>{$('sheet').classList.remove('hide');$('q').value='';$('q').dispatchEvent(new Event('input'));$('tree').style.display='block'};$('shx').onclick=()=>$('sheet').classList.add('hide');$('tree').addEventListener('click',e=>{if(e.target.closest('.ob'))setTimeout(()=>$('sheet').classList.add('hide'),0)});$('moreB').onclick=()=>$('more').classList.toggle('on')})()</script><script>(function(){const o0=window.setOreum;let jm;
-const col=['match',['get','c'],'오름','#ff8a3d','올레','#4db8ff','한라산','#c58bff','#ffffff'];
-function fc(){return{type:'FeatureCollection',features:OREUMS.map((o,i)=>({type:'Feature',properties:{i:i,c:o.c||'오름'},geometry:{type:'Point',coordinates:[o.lon,o.lat]}}))}}
-function init(){jm=new maplibregl.Map({container:'jmap',center:[126.55,33.37],zoom:8.05,minZoom:7.5,maxZoom:13,attributionControl:false,style:{version:8,sources:{s:{type:'raster',tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],tileSize:256,maxzoom:18}},layers:[{id:'s',type:'raster',source:'s'}]}});
-jm.on('load',()=>{jm.addSource('p',{type:'geojson',data:fc()});jm.addSource('sel',{type:'geojson',data:{type:'FeatureCollection',features:[]}});
-jm.addLayer({id:'pd',type:'circle',source:'p',paint:{'circle-radius':['interpolate',['linear'],['zoom'],8,3,12,6],'circle-color':col,'circle-stroke-color':'#000','circle-stroke-width':.8,'circle-opacity':.95}});
-jm.addLayer({id:'sl',type:'circle',source:'sel',paint:{'circle-radius':9,'circle-color':'#fff','circle-opacity':.25,'circle-stroke-color':'#fff','circle-stroke-width':2.5}});
-jm.on('click',e=>{const f=jm.queryRenderedFeatures([[e.point.x-12,e.point.y-12],[e.point.x+12,e.point.y+12]],{layers:['pd']});if(!f.length||mode!=='idle')return;stop();setOreum(f[0].properties.i);pickName();});
-sel(cur)})}
-function sel(i){if(!jm||!jm.getSource('sel')||!OREUMS[i])return;jm.getSource('sel').setData({type:'Feature',geometry:{type:'Point',coordinates:[OREUMS[i].lon,OREUMS[i].lat]}})}
-window.setOreum=function(i){o0(i);sel(i)};
+</script><script>(function(){const $=i=>document.getElementById(i);$('pickBtn').onclick=()=>{$('sheet').classList.remove('hide');$('q').value='';$('q').dispatchEvent(new Event('input'));$('tree').style.display='block'};$('shx').onclick=()=>$('sheet').classList.add('hide');$('tree').addEventListener('click',e=>{if(e.target.closest('.ob'))setTimeout(()=>$('sheet').classList.add('hide'),0)});$('moreB').onclick=()=>$('more').classList.toggle('on')})()</script><script>(function(){const o0=window.setOreum,$=i=>document.getElementById(i);let hm,cat='',reg=null,mk=[];
+const COL={오름:'#ff8a3d',올레:'#4db8ff',한라산:'#c58bff'};
+function clr(){mk.forEach(m=>m.remove());mk=[]}
+function rg(o){const d=o.d||'기타';return (o.si||'')+'|'+(/동$/.test(d)?((o.si==='제주'?'제주시':'서귀포시')+' 시내'):d)}function items(){return OREUMS.map((o,i)=>({o,i})).filter(x=>x.o.lat>33.1&&x.o.lat<33.6&&x.o.lon>126.1&&x.o.lon<127.0&&!cat||(x.o.c||'오름')===cat)}
+function showRegions(){reg=null;clr();$('hback').classList.add('hide');$('ht').textContent='제주 어디로 갈까요?';$('hs').textContent='동네를 누르면 크게 보여줘요';
+const g={};items().forEach(x=>{const k=rg(x.o);(g[k]=g[k]||[]).push(x)});
+Object.entries(g).forEach(([k,a])=>{const la=a.reduce((s,x)=>s+x.o.lat,0)/a.length,lo=a.reduce((s,x)=>s+x.o.lon,0)/a.length;const e=document.createElement('div');e.className='rb';e.innerHTML=k.split('|')[1]+'<small>'+a.length+'곳</small>';e.onclick=ev=>{ev.stopPropagation();showRegion(k)};mk.push(new maplibregl.Marker({element:e}).setLngLat([lo,la]).addTo(hm))});
+hm.fitBounds([[126.14,33.2],[126.97,33.58]],{padding:{top:130,bottom:90,left:10,right:10},duration:600})}
+function showRegion(k){reg=k;clr();const a=items().filter(x=>rg(x.o)===k);$('hback').classList.remove('hide');$('ht').textContent=k.split('|')[1];$('hs').textContent='가고 싶은 곳을 누르세요 ('+a.length+'곳)';
+const b=new maplibregl.LngLatBounds();const med=z=>{const v=a.map(x=>x.o[z]).sort((p,q)=>p-q);return v[v.length>>1]},ml=med('lat'),mo=med('lon');a.forEach(x=>{if(Math.abs(x.o.lat-ml)<.1&&Math.abs(x.o.lon-mo)<.12)b.extend([x.o.lon,x.o.lat]);const e=document.createElement('div');e.className='pb';e.style.setProperty('--c',COL[x.o.c||'오름']||'#fff');e.textContent=(x.o.g==='v'?'✅ ':x.o.g==='e'?'△ ':'')+x.o.n.replace(/ \([^)]*\)$/,'');e.onclick=ev=>{ev.stopPropagation();pick(x.i)};mk.push(new maplibregl.Marker({element:e}).setLngLat([x.o.lon,x.o.lat]).addTo(hm))});
+hm.fitBounds(b,{padding:{top:150,bottom:100,left:40,right:40},maxZoom:14,duration:700})}
+function pick(i){if(mode!=='idle')return;stop();setOreum(i);pickName();$('home').classList.add('hide')}
+function init(){window.__hm=hm=new maplibregl.Map({container:"hmap",center:[126.55,33.39],zoom:8.2,attributionControl:false,style:{version:8,sources:{s:{type:'raster',tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],tileSize:256,maxzoom:18}},layers:[{id:'s',type:'raster',source:'s'}]}});
+hm.on('load',()=>{showRegions();window.__home=1})}
+$('hch').onclick=e=>{const b=e.target.closest('button');if(!b)return;cat=b.dataset.c;[...$('hch').children].forEach(x=>x.classList.toggle('on',x===b));showRegions()};$('hch').children[0].classList.add('on');
+$('hback').onclick=showRegions;
+$('hfind').onclick=()=>$('pickBtn').click();
+$('hgo').onclick=()=>{$('home').classList.add('hide');$('start').click()};
+$('backHome').onclick=()=>{if(mode!=='idle'){return}stop();$('home').classList.remove('hide');if(hm)hm.resize()};
+$('tree').addEventListener('click',e=>{if(e.target.closest('.ob'))$('home').classList.add('hide')});
+if(/[?&]o=/.test(location.search))$('home').classList.add('hide');
 const t=setInterval(()=>{if(window.__ready){clearInterval(t);init()}},300)})()</script></body></html>
