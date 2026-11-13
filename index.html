@@ -153,8 +153,8 @@ function banner(t){const b=$('banner');b.textContent=t;b.style.display='block';s
 function setMode(m){mode=m;$('idle').classList.toggle('hide',m!=='idle');$('live').classList.toggle('hide',m!=='rec');$('idle').style.display=m==='idle'?'grid':'none';$('live').style.display=m==='rec'?'grid':'none';}
 function onPos(pos){const c=pos.coords,p=[c.longitude,c.latitude];lastRaw=p;
  map.getSource('me').setData({type:'FeatureCollection',features:[{type:'Feature',geometry:{type:'Point',coordinates:p}}]});
- if(c.accuracy>40){msg('GPS 신호 약함 (±'+Math.round(c.accuracy)+'m) · 하늘이 보이는 곳으로');return;}
- const last=pts[pts.length-1];if(last){const d=hav(last,p),dt=(pos.timestamp-last.t)/1000;if(d<4)return;if(dt>0&&d/dt>12)return;}
+ if(c.accuracy>30){msg('GPS 신호 약함 (±'+Math.round(c.accuracy)+'m) · 하늘이 보이는 곳으로');return;}
+ const last=pts[pts.length-1];if(last){const d=hav(last,p),dt=(pos.timestamp-last.t)/1000;const minD=Math.max(8,c.accuracy*1.2);if(d<minD)return;if(c.speed!=null&&c.speed<0.5&&d<minD*2)return;if(dt>0&&d/dt>12)return;}
  const q=[p[0],p[1]];q.t=pos.timestamp;pts.push(q);elevAt(p[0],p[1]).then(v=>alts.push(c.altitude!=null&&c.altitude>0?c.altitude:v));
  try{localStorage.setItem(KEY,JSON.stringify({o:cur,pts:pts.map(a=>[a[0],a[1],a.t])}))}catch(e){}
  let d=0;for(let i=1;i<pts.length;i++)d+=hav(pts[i-1],pts[i]);
@@ -193,7 +193,7 @@ $('rec').onclick=async()=>{if(busy)return;
  const ve=new VideoEncoder({output:(ch,m)=>mux.addVideoChunk(ch,m),error:e=>msg('인코딩 오류: '+e.message)});ve.configure(cf);
  if(audio){const ae=new AudioEncoder({output:(ch,m)=>mux.addAudioChunk(ch,m),error:()=>{}});ae.configure(acfg);const tot=44100*SECS,blk=4410;
   for(let n=0;n<tot;n+=blk)ae.encode(new AudioData({format:'f32-planar',sampleRate:44100,numberOfFrames:blk,numberOfChannels:1,timestamp:Math.round(n/44100*1e6),data:new Float32Array(blk)}));await ae.flush();}
- const t0=performance.now();
+ const t0=performance.now();try{wake()}catch(e){}
  for(let f=0;f<=F;f++){const cm=camAt(f);map.jumpTo(cm.opt);draw(cm.s);await idle();
   const sc=Math.max(W/mc.width,H/mc.height),w=mc.width*sc,h=mc.height*sc;g.drawImage(mc,(W-w)/2,(H-h)/2,w,h);
   const gr=g.createLinearGradient(0,H-220,0,H);gr.addColorStop(0,'rgba(0,0,0,0)');gr.addColorStop(1,'rgba(0,0,0,.7)');g.fillStyle=gr;g.fillRect(0,H-220,W,220);
@@ -204,7 +204,7 @@ $('rec').onclick=async()=>{if(busy)return;
   g.font='500 18px sans-serif';g.fillStyle='rgba(255,255,255,.7)';g.fillText('제주 오름 3D 트립',W-190,44);
   const vf=new VideoFrame(c,{timestamp:Math.round(f*1e6/FPS),duration:Math.round(1e6/FPS)});ve.encode(vf,{keyFrame:f%FPS===0});vf.close();
   while(ve.encodeQueueSize>8)await sleep(5);
-  if(f%5===0){$('rec').textContent='만드는 중 '+Math.round(f/F*100)+'%';msg('화면을 켜 두세요');}}
+  if(f%5===0&&f>0){const el=(performance.now()-t0)/1000,left=Math.max(1,Math.round(el/f*(F-f)/60*10)/10);$('rec').textContent='만드는 중 '+Math.round(f/F*100)+'%';msg('⏳ 영상 만드는 중 '+Math.round(f/F*100)+'% · 남은 시간 약 '+(left<1.5?'1분 이내':Math.ceil(left)+'분')+'<br>화면을 켜 둔 채 이 화면에 머물러 주세요. 다른 앱으로 나가면 멈출 수 있어요.');}else if(f===0){msg('⏳ 영상 만드는 중 · 기록 길이에 따라 몇 분 걸려요<br>화면을 켜 둔 채 이 화면에 머물러 주세요.')}}
  await ve.flush();mux.finalize();
  const blob=new Blob([target.buffer],{type:'video/mp4'}),url=URL.createObjectURL(blob);
  msg('완료! <a href="'+url+'" download="'+o.n+'.mp4">'+o.n+'.mp4 저장</a> ('+Math.round(blob.size/1024)+'KB, '+Math.round((performance.now()-t0)/1000)+'초)');
