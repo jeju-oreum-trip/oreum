@@ -234,21 +234,21 @@ function setSat(p){satP=p;
  const b=document.getElementById('satB');if(b)b.innerHTML=p==='vw'?'\uD83D\uDEF0 <b>VWorld</b> \uD56D\uACF5\uC0AC\uC9C4 \u00B7 \uB354 \uC815\uBC00(z19)<br><small>\uB204\uB974\uBA74 Esri\uB85C \uBC14\uAFD4\uC694</small>':'\uD83D\uDEF0 <b>Esri</b> \uC704\uC131 \u00B7 z18<br><small>\uB204\uB974\uBA74 VWorld(\uB354 \uC815\uBC00)\uB85C</small>';}
 window.__setSat=setSat;
 window.__st=()=>({mode,pts:pts.length,summit,isSample,total:Math.round(total),photos:photos.length});
-</script><script>(function(){const $=i=>document.getElementById(i);$('satB').onclick=()=>{window.__setSat(window.__sat()==='esri'?'vw':'esri')};$('pickBtn').onclick=()=>{$('sheet').classList.remove('hide');$('q').value='';$('q').dispatchEvent(new Event('input'));$('tree').style.display='block'};$('shx').onclick=()=>$('sheet').classList.add('hide');$('tree').addEventListener('click',e=>{if(e.target.closest('.ob'))setTimeout(()=>$('sheet').classList.add('hide'),0)});$('moreB').onclick=()=>$('more').classList.toggle('on')})()</script><script>(function(){const o0=window.setOreum,$=i=>document.getElementById(i);let hm,cat=null,mk=[];
+</script><script>(function(){const $=i=>document.getElementById(i);$('satB').onclick=()=>{window.__setSat(window.__sat()==='esri'?'vw':'esri')};$('pickBtn').onclick=()=>{$('sheet').classList.remove('hide');$('q').value='';$('q').dispatchEvent(new Event('input'));$('tree').style.display='block'};$('shx').onclick=()=>$('sheet').classList.add('hide');$('tree').addEventListener('click',e=>{if(e.target.closest('.ob'))setTimeout(()=>$('sheet').classList.add('hide'),0)});$('moreB').onclick=()=>$('more').classList.toggle('on')})()</script><script>(function(){const o0=window.setOreum,$=i=>document.getElementById(i);let hm,cat=null,mk=[],selectedRegion=null;
 const COL={오름:'#ff8a3d',올레:'#4db8ff',한라산둘레길:'#4fd18b',한라산등반로:'#c58bff'};
 const GRP2={olle:['올레'],oreum:['오름'],halla:['한라산둘레길','한라산등반로']};
 const GLB={olle:'🚶 올레길',oreum:'🌋 오름',halla:'🗻 한라산 (둘레길·등반로)'};
 function clr(){mk.forEach(m=>m.remove());mk=[]}
 function rg(o){const d=o.d||'기타';return /동$/.test(d)?((o.si==='제주'?'제주시':'서귀포시')+' 시내'):d}
 function items(){return OREUMS.map((o,i)=>({o,i})).filter(x=>x.o.lat&&x.o.lon&&GRP2[cat]&&GRP2[cat].includes(x.o.c||'오름'))}
-function showCats(){cat=null;clr();
+function showCats(){cat=null;selectedRegion=null;clr();
  $('hback').classList.add('hide');$('ht').textContent='제주 걷기 지도';$('hs').textContent='어떤 길을 볼까요? 골라 누르면 제주 지도에 그 길이 그려져요';
  const hc=$('hcat');hc.innerHTML='';hc.classList.remove('hide','strip');
  Object.keys(GRP2).forEach(k=>{const n=OREUMS.filter(o=>GRP2[k].includes(o.c||'오름')&&o.lat&&o.lon).length;
   const b=document.createElement('button');b.className='cb';b.innerHTML='<span>'+GLB[k]+'</span><small>'+n+'곳<br>눌러서 보기 ›</small>';
   b.onclick=()=>{cat=k;showGroup(null)};hc.appendChild(b)});
- hm.flyTo({center:[126.55,33.39],zoom:8.4,duration:500})}
-function showGroup(rgn){clr();
+ hm.flyTo({center:[126.55,33.39],zoom:8.4,duration:500});window.__khomeSync&&window.__khomeSync()}
+function showGroup(rgn){selectedRegion=rgn;clr();
  $('hback').classList.remove('hide');$('hback').innerHTML='← 처음으로';$('ht').textContent=GLB[cat];
  const all=items();
  const g={};all.forEach(x=>{const k=rg(x.o);(g[k]=g[k]||[]).push(x)});
@@ -262,14 +262,131 @@ function showGroup(rgn){clr();
  chip('전체',all.length,!rgn,()=>showGroup(null));
  Object.keys(g).sort().forEach(k=>chip(k,g[k].length,rgn===k,()=>showGroup(k)));
  const onc=hc.querySelector('.sc.on');if(onc)hc.scrollLeft=Math.max(0,onc.offsetLeft-60);
- if(a.length)hm.fitBounds(b,{padding:{top:130,bottom:130,left:30,right:30},maxZoom:rgn?13.5:10.2,duration:600})}
+ if(a.length)hm.fitBounds(b,{padding:{top:130,bottom:130,left:30,right:30},maxZoom:rgn?13.5:10.2,duration:600});window.__khomeSync&&window.__khomeSync()}
 function pick(i){if(mode!=='idle')return;stop();setOreum(i);pickName();$('home').classList.add('hide')}
 function init(){window.__hm=hm=new maplibregl.Map({container:"hmap",center:[126.55,33.39],zoom:8.2,attributionControl:false,style:{version:8,sources:{s:{type:'raster',tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],tileSize:256,maxzoom:18},v:{type:'raster',tiles:['https://api.vworld.kr/req/wmts/1.0.0/3577F5B4-413B-42AB-A133-7B4341D5607E/Satellite/{z}/{y}/{x}.jpeg'],tileSize:256,maxzoom:19}},layers:[{id:'s',type:'raster',source:'s'},{id:'v',type:'raster',source:'v',layout:{visibility:'none'}}]}});
 hm.on('load',()=>{showCats();window.__home=1})}
+window.__kh={items,rg,COL,pick,get cat(){return cat},get region(){return selectedRegion}};
 $('hback').onclick=showCats;
 $('hfind').onclick=()=>$('pickBtn').click();
 $('hgo').onclick=()=>{$('home').classList.add('hide');$('start').click()};
 $('backHome').onclick=()=>{if(mode!=='idle'){return}stop();$('home').classList.remove('hide');if(hm){hm.resize();showCats()}};
 $('tree').addEventListener('click',e=>{if(e.target.closest('.ob'))$('home').classList.add('hide')});
 if(/[?&]o=/.test(location.search))$('home').classList.add('hide');
-const t=setInterval(()=>{if(window.__ready){clearInterval(t);init()}},300)})()</script><script>(function(){const o1=window.setOreum;window.setOreum=function(i){o1(i);const w=document.getElementById('wrn');if(w)w.classList.toggle('hide',!(OREUMS[i]&&OREUMS[i].c==='한라산둘레길'))}})()</script></body></html>
+const t=setInterval(()=>{if(window.__ready){clearInterval(t);init()}},300)})()</script><script>(function(){const o1=window.setOreum;window.setOreum=function(i){o1(i);const w=document.getElementById('wrn');if(w)w.classList.toggle('hide',!(OREUMS[i]&&OREUMS[i].c==='한라산둘레길'))}})()</script><style>
+.kmapbox{position:absolute;inset:0;width:100%;height:100%;display:none;z-index:2;background:#e8e8e4}
+.ktog{position:absolute;z-index:5;background:#1f3a2cee;color:#fff;border:2px solid #ffffff55;border-radius:10px;font:700 13px system-ui,sans-serif;padding:7px 10px;cursor:pointer}
+#hkTog{right:10px;bottom:92px}
+#dkTog{right:10px;top:10px}
+.kme{width:18px;height:18px;border-radius:50%;background:#2f7bff;border:3px solid #fff;box-shadow:0 1px 6px #000a}
+#hud,#banner,#ph{z-index:3}
+</style>
+<script>
+// ---- 카카오맵 모드 (정밀 지도 보기) : 타일 저장·영상 합성 없이 온라인 표시만 사용 ----
+(function(){
+const KAKAO_APPKEY='be2e657c1bfd58f8debf0df4f59c064c';
+if(!KAKAO_APPKEY||KAKAO_APPKEY.indexOf('_')===0)return;
+const $=i=>document.getElementById(i);
+function mkEl(tag,id,cls){const e=document.createElement(tag);if(id)e.id=id;if(cls)e.className=cls;return e}
+let kLoading=null;
+function loadKakao(){
+ if(window.kakao&&kakao.maps&&kakao.maps.Map)return Promise.resolve();
+ if(kLoading)return kLoading;
+ kLoading=new Promise((res,rej)=>{
+  const s=document.createElement('script');
+  s.src='https://dapi.kakao.com/v2/maps/sdk.js?appkey='+KAKAO_APPKEY+'&autoload=false';
+  s.onload=()=>{try{kakao.maps.load(()=>res())}catch(e){rej(e)}};
+  s.onerror=()=>rej(new Error('sdk'));
+  document.head.appendChild(s);
+ });
+ kLoading.catch(()=>{kLoading=null});
+ return kLoading;
+}
+// ===== 홈 화면 =====
+let hk=null,hkOn=false,hOver=[];
+const hmapK=mkEl('div','hmapK','kmapbox');$('home').appendChild(hmapK);
+const hTog=mkEl('button','hkTog','ktog');hTog.textContent='🗺 카카오맵';$('home').appendChild(hTog);
+function hClear(){hOver.forEach(o=>o.setMap(null));hOver=[]}
+function hSync(){
+ if(!hk)return;hClear();
+ const KH=window.__kh;if(!KH)return;
+ if(!KH.cat){hk.setCenter(new kakao.maps.LatLng(33.39,126.55));hk.setLevel(10);return}
+ const a=KH.items().filter(x=>!KH.region||KH.rg(x.o)===KH.region),b=new kakao.maps.LatLngBounds();
+ a.forEach(x=>{
+  const e=document.createElement('div');e.className='pb'+(a.length>60?' mini':'');e.style.setProperty('--c',KH.COL[x.o.c||'오름']||'#fff');if(!x.o.h)e.style.opacity=.6;
+  e.textContent=(x.o.h?(x.o.g==='v'?'✅ ':x.o.auto?'△ 자동연결 ':'△ '):(x.o.g==='x'?'📍 ':'🗺 '))+(x.o.a?x.o.n+' ('+x.o.a+')':x.o.n.replace(/ \([^)]*\)$/,''));
+  e.onclick=ev=>{ev.stopPropagation();KH.pick(x.i)};
+  const pos=new kakao.maps.LatLng(x.o.lat,x.o.lon);b.extend(pos);
+  hOver.push(new kakao.maps.CustomOverlay({position:pos,content:e,yAnchor:.5,xAnchor:.5,zIndex:3,map:hk}));
+ });
+ if(a.length)hk.setBounds(b,130,30,130,30);
+}
+window.__khomeSync=function(){if(hkOn)try{hSync()}catch(e){}};
+hTog.onclick=async()=>{
+ if(hTog.disabled)return;
+ hTog.disabled=true;
+ try{
+  await loadKakao();
+  hmapK.style.display='block';
+  if(!hk)hk=new kakao.maps.Map(hmapK,{center:new kakao.maps.LatLng(33.39,126.55),level:10});
+  hkOn=!hkOn;
+  hmapK.style.display=hkOn?'block':'none';
+  hTog.textContent=hkOn?'🛰 위성지도':'🗺 카카오맵';
+  if(hkOn){hk.relayout();hSync()}
+ }catch(e){
+  hTog.textContent='⚠ 지금은 위성만';setTimeout(()=>{hTog.textContent='🗺 카카오맵'},2500);
+ }finally{hTog.disabled=false}
+};
+// ===== 상세·기록 화면 =====
+let dk=null,dkOn=false,dLineW=null,dLineO=null,dMeOv=null;
+const mapK=mkEl('div','mapK','kmapbox');$('frame').appendChild(mapK);
+const dTog=mkEl('button','dkTog','ktog');dTog.textContent='🗺 카카오맵';$('frame').appendChild(dTog);
+function dPath(){return (typeof mode!=='undefined'&&mode==='rec'&&pts.length)?pts:track}
+function dSync(fit){
+ if(!dk)return;
+ const p=dPath();
+ const ll=p.map(q=>new kakao.maps.LatLng(q[1],q[0]));
+ if(ll.length===1)ll.push(ll[0]);
+ if(!ll.length){dLineW.setMap(null);dLineO.setMap(null);dMeOv.setMap(null);return}
+ dLineW.setMap(dk);dLineO.setMap(dk);
+ dLineW.setPath(ll);dLineO.setPath(ll);
+ if(typeof mode!=='undefined'&&mode==='rec'&&pts.length){
+  const q=pts[pts.length-1],pos=new kakao.maps.LatLng(q[1],q[0]);
+  dMeOv.setPosition(pos);dMeOv.setMap(dk);
+  if(pts.length===1){dk.setLevel(3);dk.setCenter(pos)}else dk.panTo(pos);
+ }else{
+  dMeOv.setMap(null);
+  if(fit){const b=new kakao.maps.LatLngBounds();ll.forEach(x=>b.extend(x));if(!b.isEmpty())dk.setBounds(b,120,60,190,60)}
+ }
+}
+dTog.onclick=async()=>{
+ if(dTog.disabled)return;
+ dTog.disabled=true;
+ try{
+  await loadKakao();
+  mapK.style.display='block';
+  if(!dk){
+   dk=new kakao.maps.Map(mapK,{center:new kakao.maps.LatLng(OREUMS[cur].lat,OREUMS[cur].lon),level:5});
+   dLineW=new kakao.maps.Polyline({strokeWeight:9,strokeColor:'#ffffff',strokeOpacity:.9,zIndex:2});
+   dLineO=new kakao.maps.Polyline({strokeWeight:5,strokeColor:'#ff6a00',strokeOpacity:1,zIndex:3});
+   const me=document.createElement('div');me.className='kme';
+   dMeOv=new kakao.maps.CustomOverlay({position:new kakao.maps.LatLng(33.39,126.55),content:me,yAnchor:.5,xAnchor:.5,zIndex:4});
+  }
+  dkOn=!dkOn;
+  mapK.style.display=dkOn?'block':'none';
+  dTog.textContent=dkOn?'🛰 위성 3D':'🗺 카카오맵';
+  if(dkOn){dk.relayout();dSync(true)}
+ }catch(e){
+  dTog.textContent='⚠ 지금은 위성만';setTimeout(()=>{dTog.textContent='🗺 카카오맵'},2500);
+ }finally{dTog.disabled=false}
+};
+function forceSat(){if(dkOn){dkOn=false;mapK.style.display='none';dTog.textContent='🗺 카카오맵'}}
+// 상태 변경 훅 (기존 함수 감싸기)
+if(typeof onPos==='function'){const _o=onPos;onPos=function(p){_o(p);if(dkOn)try{dSync(false)}catch(e){}}}
+if(typeof setTrack==='function'){const _s=setTrack;setTrack=function(){_s.apply(null,arguments);if(dkOn)try{dSync(true)}catch(e){}}}
+if(typeof setMode==='function'){const _m=setMode;setMode=function(){_m.apply(null,arguments);if(dkOn)try{dSync(true)}catch(e){}}}
+// 3D 영상은 기존 위성 모드에서만 (카카오 타일 영상 합성 금지)
+['play','rec'].forEach(id=>{const el=$(id);if(!el)return;const h=el.onclick;el.onclick=function(){forceSat();h&&h.apply(this,arguments)}});
+})();
+</script>
+</body></html>
