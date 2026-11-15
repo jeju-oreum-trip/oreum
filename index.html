@@ -241,14 +241,14 @@ const GLB={olle:'🚶 올레길',oreum:'🌋 오름',halla:'🗻 한라산 (둘�
 function clr(){mk.forEach(m=>m.remove());mk=[]}
 function rg(o){const d=o.d||'기타';return /동$/.test(d)?((o.si==='제주'?'제주시':'서귀포시')+' 시내'):d}
 function items(){return OREUMS.map((o,i)=>({o,i})).filter(x=>x.o.lat&&x.o.lon&&GRP2[cat]&&GRP2[cat].includes(x.o.c||'오름'))}
-function showCats(){cat=null;selectedRegion=null;clr();
+function showCats(){cat=null;selectedRegion=null;clr();$('hbot').style.display='flex';
  $('hback').classList.add('hide');$('ht').textContent='제주 걷기 지도';$('hs').textContent='어떤 길을 볼까요? 골라 누르면 제주 지도에 그 길이 그려져요';
  const hc=$('hcat');hc.innerHTML='';hc.classList.remove('hide','strip');
  Object.keys(GRP2).forEach(k=>{const n=OREUMS.filter(o=>GRP2[k].includes(o.c||'오름')&&o.lat&&o.lon).length;
   const b=document.createElement('button');b.className='cb';b.innerHTML='<span>'+GLB[k]+'</span><small>'+n+'곳<br>눌러서 보기 ›</small>';
   b.onclick=()=>{cat=k;showGroup(null)};hc.appendChild(b)});
  hm.flyTo({center:[126.55,33.39],zoom:8.4,duration:500});window.__khomeSync&&window.__khomeSync()}
-function showGroup(rgn){selectedRegion=rgn;clr();
+function showGroup(rgn){selectedRegion=rgn;clr();$('hbot').style.display='none';
  $('hback').classList.remove('hide');$('hback').innerHTML='← 처음으로';$('ht').textContent=GLB[cat];
  const all=items();
  const g={};all.forEach(x=>{const k=rg(x.o);(g[k]=g[k]||[]).push(x)});
@@ -319,7 +319,7 @@ function hSync(){
   const pos=new kakao.maps.LatLng(x.o.lat,x.o.lon);b.extend(pos);
   hOver.push(new kakao.maps.CustomOverlay({position:pos,content:e,yAnchor:.5,xAnchor:.5,zIndex:3,map:hk}));
  });
- if(a.length)hk.setBounds(b,130,30,130,30);
+ if(a.length){if(KH.region){const med=k=>a.map(x=>x.o[k]).sort((p,q)=>p-q)[a.length>>1];const la=med('lat'),lo=med('lon'),near=new kakao.maps.LatLngBounds();a.filter(x=>Math.abs(x.o.lat-la)<.1&&Math.abs(x.o.lon-lo)<.12).forEach(x=>near.extend(new kakao.maps.LatLng(x.o.lat,x.o.lon)));if(!near.isEmpty())hk.setBounds(near,130,30,130,30)}else hk.setBounds(b,130,30,130,30)}
 }
 window.__khomeSync=function(){if(hkOn)try{hSync()}catch(e){}};
 hTog.onclick=async()=>{
