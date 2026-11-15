@@ -61,7 +61,8 @@ const ROUTES={"용눈이오름":[[126.83144,33.46309],[126.83143,33.46292],[126.
 const qi=$('q'),tree=$('tree');const RB=o=>o.h?(o.g==='v'?'✅ 루트':o.auto?'△ 자동연결':'△ 추정'):(o.g==='x'?'📍 위치 필요':'🗺 지도만');
 let CAT=null;const CI={오름:'🌋',올레:'🚶',한라산둘레길:'🌲',한라산등반로:'🗻',숲길:'🌲',마을길:'🏘'};
 const GRP={oreum:['오름'],olle:['올레'],halla:['한라산둘레길','한라산등반로'],forest:['숲길','마을길']};
-const FN=o=>o.n+(o.a?' ('+o.a+')':'');function optHtml(o,i,showD){return '<button class="ob" data-i="'+i+'">'+(o.c==='오름'?'':CI[o.c]+' ')+FN(o)+' <small>'+RB(o)+(o.w?' (좌표불확실)':'')+(showD?' · '+o.si+' '+o.d:'')+'</small></button>'}
+const TRAIL_CLOSURE={TH5:{from:'2026-11-01',to:'2027-05-15',source:'http://hallatrail.or.kr/notice/?bmode=view&idx=175347907'}};const closedTrail=()=>TRAIL_CLOSURE[OREUMS[cur]?.no];const closureText=()=>{const c=closedTrail();return c?'⛔ 입산 통제: '+c.from+' ~ '+c.to+' · 해제 확인 전 이용하지 마세요.':''};
+const FN=o=>(TRAIL_CLOSURE[o.no]?'⛔ 입산 통제 · ':'')+o.n+(o.a?' ('+o.a+')':'');function optHtml(o,i,showD){return '<button class="ob" data-i="'+i+'">'+(o.c==='오름'?'':CI[o.c]+' ')+FN(o)+' <small>'+RB(o)+(o.w?' (좌표불확실)':'')+(showD?' · '+o.si+' '+o.d:'')+'</small></button>'}
 function fillSel(f){f=(f||'').replace(/\s/g,'');let h='';if(f){let c=0;OREUMS.forEach((o,i)=>{if(CAT&&!GRP[CAT].includes(o.c||'오름'))return;if(!(o.n+(o.a||'')).replace(/\s/g,'').includes(f))return;if(c++>80)return;h+=optHtml(o,i,1)});if(!c)h='<div class="em">찾는 오름이 없어요</div>'}
 else{const T={};let nR=0,nM=0;OREUMS.forEach((o,i)=>{if(CAT&&!GRP[CAT].includes(o.c||'오름'))return;if(o.h)nR++;else nM++;((T[o.si]=T[o.si]||{})[o.d]=T[o.si][o.d]||[]).push(i)});h+='<div class="em" style="padding:10px 12px">루트 있는 곳 <b>'+nR+'</b>곳 · 지도만 <b>'+nM+'</b>곳</div>';
  ['제주','서귀'].forEach(si=>{const D=T[si];if(!D)return;let n=0;Object.values(D).forEach(a=>n+=a.length);h+='<details class="si"><summary>'+(si==='제주'?'제주시':'서귀포시')+' <small>'+n+'개</small></summary>';
@@ -111,7 +112,8 @@ function resample(pts,N=300){const c=[0];for(let i=1;i<pts.length;i++)c.push(c[i
 function setTrack(pts,sample,label){track=pts;isSample=sample;cum=[0];for(let k=1;k<track.length;k++)cum.push(cum[k-1]+hav(track[k-1],track[k]));total=cum[cum.length-1];
  elev=[];Promise.all(track.map((t,k)=>elevAt(t[0],t[1]).then(v=>elev[k]=v)));
  $('sub').textContent=sample?(label?'시험판 · '+label+' · 내 기록 아님':'시험판 · 샘플 경로(가짜)'):'내 기록 · '+(total/1000).toFixed(2)+'km';$('sample').classList.toggle('hide',sample);{const nl=sample&&OREUMS[cur]&&OREUMS[cur].noLoc;$('play').disabled=$('rec').disabled=!!nl}draw(0);cam=null;}
-async function setOreum(i){officialGeometry=null;cur=+i;const o=OREUMS[cur];$('hn').textContent=FN(o);photos=[];if(o.g==='x'){o.lat=33.38;o.lon=126.55;o.noLoc=1}
+async function setOreum(i){officialGeometry=null;cur=+i;const o=OREUMS[cur];$('hn').textContent=FN(o);$('start').disabled=!!closedTrail();$('start').textContent=closedTrail()?'⛔ 입산 통제':'📍 걷기 시작';photos=[];if(o.g==='x'){o.lat=33.38;o.lon=126.55;o.noLoc=1}
+if(closedTrail()){setMapOnly(o,1);$('sub').textContent='⛔ 입산 통제 · 2026-11-01 ~ 2027-05-15';map.jumpTo({center:[o.lon,o.lat],zoom:13,pitch:0,bearing:0});msg(closureText()+'<br>산불조심기간 시험림길 전면 통제 (운영기관 2026-10-30 공지).<br><a href="'+closedTrail().source+'" target="_blank" rel="noopener noreferrer" style="color:#ffd16c;text-decoration:underline">한라산둘레길 공식 통제 공지 보기 ↗</a>');window.__kdetailSync&&window.__kdetailSync();return}
 if(o.official){const f=OFFICIAL[o.official];setMapOnly(o,0);officialGeometry=f.geometry;map.getSource('route').setData({type:'Feature',geometry:officialGeometry});const lines=officialGeometry.type==='LineString'?[officialGeometry.coordinates]:officialGeometry.coordinates;const b=new maplibregl.LngLatBounds();lines.forEach(a=>a.forEach(q=>b.extend(q)));map.fitBounds(b,{padding:40,pitch:0,bearing:0,duration:600});$('sub').textContent='서귀포시 공식 원본 · '+f.parts+'개 선형 구간 · 현장 미검증';$('hd').textContent='-';$('he').textContent='-';$('hu').textContent='-';msg('공식 SHP 경로선을 그대로 표시해요. '+(f.parts>1?'분기·대체 구간의 진행 순서는 미검증이라 3D 영상은 꺼두었어요. ':'현재 개방·우회 여부는 확인하지 않았어요. ')+'현장 안내를 따르세요.');window.__kdetailSync&&window.__kdetailSync();return}
 let rr=null,lb=null;if(o.tid){await loadRT();if(cur!==+i)return;const rt=RT[o.tid];if(rt)rr=resample(rt,500)}else if(ROUTES[o.n])rr=resample(ROUTES[o.n],300);else if(o.g==='e'){await loadRX();if(cur!==+i)return;const rt=RX[o.no];if(rt)rr=resample(rt,300)}
 map.getSource('spot').setData({type:'FeatureCollection',features:[]});
@@ -147,8 +149,8 @@ function show(f){const c=camAt(f);map.jumpTo(c.opt);draw(c.s);}
 function fly(ms,done){buildCam();const t0=performance.now();playing=true;const step=now=>{if(!playing)return;const f=(now-t0)/ms*F;show(f);if(f<F)raf=requestAnimationFrame(step);else{playing=false;done&&done();}};raf=requestAnimationFrame(step);}
 function stop(){playing=false;cancelAnimationFrame(raf);}
 const idle=()=>new Promise(r=>{let d=0;const f=()=>{if(!d){d=1;r()}};map.once('idle',f);setTimeout(f,5000);});
-$('play').onclick=()=>{if(playing){stop();$('play').textContent='▶ 3D 영상 보기';return;}$('play').textContent='■ 멈춤';map.jumpTo({center:track[0],zoom:15,pitch:60});draw(0);map.once('idle',()=>fly(SECS*1000,()=>$('play').textContent='▶ 3D 영상 보기'));};
-$('sample').textContent='기본 경로로 돌아가기';$('sample').onclick=()=>{stop();setOreum(cur);msg('')};
+$('play').onclick=()=>{if(closedTrail())return;if(playing){stop();$('play').textContent='▶ 3D 영상 보기';return;}$('play').textContent='■ 멈춤';map.jumpTo({center:track[0],zoom:15,pitch:60});draw(0);map.once('idle',()=>fly(SECS*1000,()=>$('play').textContent='▶ 3D 영상 보기'));};
+$('sample').textContent='기본 경로로 돌아가기';$('sample').onclick=()=>{stop();setOreum(cur);if(!closedTrail())msg('')};
 // ---- 사진 ----
 async function addPhoto(file,q){try{const bm=await createImageBitmap(file,{resizeWidth:480,resizeQuality:'medium'});const c=document.createElement('canvas');c.width=bm.width;c.height=bm.height;c.getContext('2d').drawImage(bm,0,0);
  const url=c.toDataURL('image/jpeg',.85),img=new Image();img.src=url;await img.decode();photos.push({url,img,q});return true;}catch(e){msg('사진을 읽지 못했어요');return false;}}
@@ -180,7 +182,7 @@ function onPos(pos){const c=pos.coords,p=[c.longitude,c.latitude];lastRaw=p;
  map.easeTo({center:p,zoom:16.3,pitch:50,duration:900});msg('기록 중 · 점 '+pts.length+'개');
  if(!summit){const o=OREUMS[cur];if(!o.tid&&hav(p,[o.lon,o.lat])<90){summit=true;try{navigator.vibrate&&navigator.vibrate([200,100,200])}catch(e){}banner('🎉 정상 도착! '+o.n+' · '+$('ht').textContent);}}}
 function onErr(e){msg(e.code===1?'위치 권한을 허용해 주세요 (주소창 자물쇠 → 위치 허용)':'GPS를 못 잡았어요: '+e.message);}
-$('start').onclick=async()=>{if(!navigator.geolocation){msg('이 기기는 GPS를 지원하지 않아요');return;}
+$('start').onclick=async()=>{if(closedTrail()){return;}if(!navigator.geolocation){msg('이 기기는 GPS를 지원하지 않아요');return;}
  stop();photos=[];setTrack(makeSample(OREUMS[cur]),true);$('sub').textContent='기록 중…';pts=[];alts=[];summit=false;setMode('rec');
  map.getSource('route').setData({type:'Feature',geometry:{type:'LineString',coordinates:[[0,0],[0,0]]}});$('hd').textContent='0.00';$('hu').textContent='0';$('he').textContent='-';$('hp').textContent='';
  await wake();t0=Date.now();tick=setInterval(()=>{const s=Math.floor((Date.now()-t0)/1000);$('ht').innerHTML='시간 <b>'+Math.floor(s/60)+':'+String(s%60).padStart(2,'0')+'</b>'},1000);
@@ -195,7 +197,7 @@ $('stop').onclick=async()=>{navigator.geolocation.clearWatch(watchId);clearInter
  map.jumpTo({center:r[0],zoom:15,pitch:60});msg('기록 완료! ▶ 영상 보기 / 🎬 영상 저장을 눌러 보세요 ('+(T/1000).toFixed(2)+'km)');};
 // ---- 영상 저장 (프레임 단위, H.264 mp4) ----
 let busy=false;
-$('rec').onclick=async()=>{if(busy)return;
+$('rec').onclick=async()=>{if(closedTrail())return;if(busy)return;
  if(typeof VideoEncoder==='undefined'){msg('이 브라우저는 영상 저장을 지원하지 않아요 (크롬 최신 버전 필요)');return;}
  stop();busy=true;$('play').disabled=true;$('rec').disabled=true;map.jumpTo({center:track[0],zoom:15,pitch:60});draw(0);const o=OREUMS[cur];await idle();await sleep(800);buildCam();
  const W=540,H=960,c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d'),mc=map.getCanvas();
