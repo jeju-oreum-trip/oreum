@@ -261,6 +261,7 @@ function showGroup(rgn){clr();
  const chip=(t,n,on,fn)=>{const c=document.createElement('button');c.className='sc'+(on?' on':'');c.textContent=t+' '+n;c.onclick=fn;hc.appendChild(c)};
  chip('전체',all.length,!rgn,()=>showGroup(null));
  Object.keys(g).sort().forEach(k=>chip(k,g[k].length,rgn===k,()=>showGroup(k)));
+ const onc=hc.querySelector('.sc.on');if(onc)hc.scrollLeft=Math.max(0,onc.offsetLeft-60);
  if(a.length)hm.fitBounds(b,{padding:{top:130,bottom:130,left:30,right:30},maxZoom:rgn?13.5:10.2,duration:600})}
 function pick(i){if(mode!=='idle')return;stop();setOreum(i);pickName();$('home').classList.add('hide')}
 function init(){window.__hm=hm=new maplibregl.Map({container:"hmap",center:[126.55,33.39],zoom:8.2,attributionControl:false,style:{version:8,sources:{s:{type:'raster',tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],tileSize:256,maxzoom:18},v:{type:'raster',tiles:['https://api.vworld.kr/req/wmts/1.0.0/3577F5B4-413B-42AB-A133-7B4341D5607E/Satellite/{z}/{y}/{x}.jpeg'],tileSize:256,maxzoom:19}},layers:[{id:'s',type:'raster',source:'s'},{id:'v',type:'raster',source:'v',layout:{visibility:'none'}}]}});
