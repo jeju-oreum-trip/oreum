@@ -140,7 +140,7 @@ if(rr){lb=o.auto?'△ 자동 연결(OSM+길찾기), 미검증 샘플':o.tid?(o.g
 setTrack(rr,true,lb);map.jumpTo({center:track[0],zoom:15,pitch:60,bearing:20});}
 else if(o.noLoc){setMapOnly(o,0);map.jumpTo({center:[o.lon,o.lat],zoom:9.5,pitch:0});}
 else{setMapOnly(o,1);map.jumpTo({center:[o.lon,o.lat],zoom:15.8,pitch:45,bearing:15});}
-if(o.noLoc)msg('📍 이 오름은 위치 좌표가 아직 없어요. 📍 걷기 시작으로 직접 기록하면 3D 영상으로 만들 수 있어요.');else if(o.parcel)msg('📌 공식 지번의 중심 근사 위치예요. 정상·입구가 아니라 길안내·기록의 출발점으로는 쓸 수 없어요.');else if(!rr)msg(o.source?'🗺 공공데이터의 대표 위치만 표시해요. 경로선은 확보하지 못했어요. 현장 안내를 따르세요. 개방 여부·입장료는 방문 전 확인하세요.':'🗺 아직 루트 자료가 없어 지도로 위치만 보여줘요. 📍 걷기 시작으로 직접 걸으면 기록과 3D 영상을 만들 수 있어요.');else if(o.w)msg('⚠ 위치 좌표가 불확실한 오름이에요(같은 이름 여러 곳).');else msg('');}
+if(o.noLoc)msg('📍 이 오름은 위치 좌표가 아직 없어요. 📍 걷기 시작으로 직접 기록하면 3D 영상으로 만들 수 있어요.');else if(o.parcel)msg('📌 공식 지번의 중심 근사 위치예요. 정상·입구가 아니라 길안내 목적지로는 쓸 수 없어요. 걷기를 시작하면 이 점이 아니라 내 현재 위치부터 GPS만 기록해요.');else if(!rr)msg(o.source?'🗺 공공데이터의 대표 위치만 표시해요. 경로선은 확보하지 못했어요. 현장 안내를 따르세요. 개방 여부·입장료는 방문 전 확인하세요.':'🗺 아직 루트 자료가 없어 지도로 위치만 보여줘요. 📍 걷기 시작으로 직접 걸으면 기록과 3D 영상을 만들 수 있어요.');else if(o.w)msg('⚠ 위치 좌표가 불확실한 오름이에요(같은 이름 여러 곳).');else msg('');}
 function setMapOnly(o,showSpot){track=[];total=0;isSample=true;cam=null;
 map.getSource('route').setData({type:'Feature',geometry:{type:'LineString',coordinates:[]}});
 if(showSpot)map.getSource('spot').setData({type:'Feature',geometry:{type:'Point',coordinates:[o.lon,o.lat]}});
