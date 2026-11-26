@@ -281,7 +281,7 @@ function showGroup(rgn){selectedRegion=rgn;clr();$('hbot').style.display='none';
  const mini=a.length>60;
  const b=new maplibregl.LngLatBounds();
  a.forEach(x=>{const e=document.createElement('div');e.className='pb'+(mini?' mini':'');e.style.setProperty('--c',COL[x.o.c||'오름']||'#fff');if(!x.o.h)e.style.opacity=.6;e.textContent=(x.o.h?(x.o.g==='v'?'✅ ':x.o.auto?'△ 자동연결 ':'△ '):(x.o.parcel?'📌 ':x.o.g==='x'?'📍 ':'🗺 '))+(x.o.a?x.o.n+' ('+x.o.a+')':x.o.n.replace(/ \([^)]*\)$/,''));e.onclick=ev=>{ev.stopPropagation();pick(x.i)};mk.push(new maplibregl.Marker({element:e}).setLngLat([x.o.lon,x.o.lat]).addTo(hm));b.extend([x.o.lon,x.o.lat])});
- const hc=$('hcat');hc.innerHTML='';hc.classList.remove('hide');hc.classList.add('strip');
+ const hc=$('hcat');hc.innerHTML='';hc.classList.remove('hide','t1');hc.classList.add('strip');
  const chip=(t,n,on,fn)=>{const c=document.createElement('button');c.className='sc'+(on?' on':'');c.textContent=t+' '+n;c.onclick=fn;hc.appendChild(c)};
  chip('전체',all.length,!rgn,()=>showGroup(null));
  Object.keys(g).sort().forEach(k=>chip(k,g[k].length,rgn===k,()=>showGroup(k)));
